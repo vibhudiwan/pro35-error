@@ -3,6 +3,8 @@ var foodS,foodStock;
 var feed,addFood;
 var foodObj;
 var milkObj,mImage,foodn;
+var name1,feedTime;
+var lastFed,currentTime;
 
 function preload(){
 sadDog=loadImage("images/dogImg.png");
@@ -11,6 +13,7 @@ mImage = loadImage("images/milk.png");
 }
 
 function setup() {
+  
   database=firebase.database();
   foodStock=database.ref('food')
   foodStock.on("value",readStock);
@@ -21,7 +24,11 @@ function setup() {
   foodStock=database.ref('Food');
   foodStock.on("value",readStock);
 
- 
+  feedTime=database.ref('FeedTime');
+  feedTime.on("value",function(data){
+    lastFed=data.val();
+  });
+        
   dog=createSprite(200,400,150,150);
   dog.addImage(sadDog);
   dog.scale=0.15;
@@ -33,15 +40,37 @@ function setup() {
   addFood=createButton("Add Food");
   addFood.position(700,95);
   addFood.mousePressed(addFoods);
-}
+
+  name1 = createInput("ROCKY");
+  name1.position(550,510);
+
+
+  }
 
 function draw() {
-  
+  currentTime = hour();
   background(46,139,87);
-  console.log(foodS);
+  foodObj.display();
   textSize(20);
   stroke("white");
   text("FOOD REMAINING :" + foodS ,250,250);
+  text("Name your dog :",20,475)
+  textSize(15);   
+  if (lastFed>=12){
+    text("LAST FED :" + lastFed + "th Hour",200,200);
+  }
+  else if (lastFed===0){
+    text("LAST FED : 12AM ",200,200);
+  } 
+  else{
+    text("LAST FED :" + feedTime + "th Hour",200,200);
+  }
+
+  if(foodS<=0){
+    foodS=0;
+  }
+
+  //console.log(currentTime);
   drawSprites();
 }
 
@@ -55,10 +84,13 @@ function readStock(data){
 //function to update food stock and last fed time
 function feedDog(){
   dog.addImage(happyDog);
-  foodObj.updateFoodStock(foodObj.getFoodStock()-1);
+ foodObj.updateFoodStock(foodObj.getFoodStock()-1);
   database.ref('/').update({
     Food:foodObj.getFoodStock(),
+    FeedTime :hour(),
+    //lastFed : hour(),
     
+            
   })
 }
 
